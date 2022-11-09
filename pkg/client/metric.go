@@ -1,17 +1,18 @@
 package client
 
 import (
+	"aliyun-exporter/pkg/config"
+	"aliyun-exporter/pkg/ratelimit"
 	"encoding/json"
 	"fmt"
+	"sort"
+	"time"
+
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/cms"
-	"github.com/IAOTW/aliyun-exporter/pkg/config"
-	"github.com/IAOTW/aliyun-exporter/pkg/ratelimit"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
-	"sort"
-	"time"
 )
 
 var ignores = map[string]struct{}{
@@ -136,7 +137,6 @@ func (c *MetricClient) retrive(sub string, name string, period string) ([]Datapo
 		level.Debug(c.logger).Log("content", resp.GetHttpContentString(), "error", err)
 		return nil, err
 	}
-
 	return datapoints, nil
 }
 
@@ -149,18 +149,40 @@ func (c *MetricClient) Collect(namespace string, sub string, m *config.Metric, c
 
 	datapoints, err := c.retrive(sub, m.Name, m.Period)
 	if err != nil {
-		level.Error(c.logger).Log("msg", "failed to retrive datapoints", "cloudID", c.cloudID, "namespace", sub, "name", m.String(), "error", err)
+		level.Error(c.logger).Log("msg", "failed to retrive datapoints", "cloudID", c.cloudID, "sub", sub, "name", m.String(), "error", err)
 		return
 	}
-	for _, dp := range datapoints {
-		val := dp.Get(m.Measure)
-		ch <- prometheus.MustNewConstMetric(
-			m.Desc(namespace, sub, dp.Labels()...),
-			prometheus.GaugeValue,
-			val,
-			append(dp.Values(m.Dimensions...), c.cloudID)...,
-		)
+	// 此处增加对spec的过滤,只发送配置的instance的metric
+	// 当配置文件没有配置spce的时候,打印提示，然后输出所有的实例的metric
+	if len(m.Spec.Claim) == 0 {
+		level.Warn(c.logger).Log("msg", "you could appoint \"spec\" expose to particular instance's metric", "metric", m.Name)
+		for _, dp := range datapoints {
+			val := dp.Get(m.Measure)
+			ch <- prometheus.MustNewConstMetric(
+				m.Desc(namespace, sub, dp.Labels()...),
+				prometheus.GaugeValue,
+				val,
+				append(dp.Values(m.Dimensions...), c.cloudID)...,
+			)
+		}
+	} else {
+		for _, dp := range datapoints {
+			for i := 0; i < len(m.Spec.Claim); i++ {
+				for _, instance := range m.Spec.Claim[i].Instance {
+					if dp["instanceId"].(string) == instance {
+						val := dp.Get(m.Measure)
+						ch <- prometheus.MustNewConstMetric(
+							m.Desc(namespace, sub, dp.Labels()...),
+							prometheus.GaugeValue,
+							val,
+							append(dp.Values(m.Dimensions...), c.cloudID, m.Spec.Claim[i].App, m.Spec.Claim[i].Team)...,
+						)
+					}
+				}
+			}
+		}
 	}
+
 }
 
 // DescribeMetricMetaList return metrics meta list

@@ -18,7 +18,38 @@ go build -o aliyun-exporter
 # run
 ./aliyun-exporter serve
 ```
+## Update
+- 新增了yaml配置选项："spec",因为我们往往会创建很多的资源组来区分资源的归属,所以"app"实际上就是资源组标识,"team"是我个人用的报警的推送组,"instance"为资源组下想要展示的资源实例.  
+- "instance"定义了要收集的实例ID,因为往往有时候你可以能只是一个ram账号，不想收集其他人的资源信息
+-  添加的"app"、"team"都会作为额外的label添加到metric中  
+- 关闭了查看config的接口,ak sk如此重要的数据不应该直接查看的
+## 困扰
+新增的spec并不是一个全局的定义,因此在编辑配置文件的时候还是蛮痛苦的
 
+```yaml
+metrics:
+  acs_kvstore:
+    - name: ShardingCpuUsage
+      desc: CPU使用率
+      dimensions:
+        - instanceId
+        - nodeId
+      measure: Average
+      period: 60
+      unit: "%"
+      spec:
+        claim:
+          - app: A
+            team: tt-A
+            instance:
+              - instanceId
+              - instanceId
+          - app: B
+            team: tt-B
+            instance:
+              - instanceId
+              - instanceId        
+```
 ## 1. Based on configuration files
 Provide a configuration file containing authentication information.
 ```yaml
@@ -62,7 +93,7 @@ credentials:
 #      # Maximum number of samples per send.
 #      max_samples_per_send: 500
 ```
-You can visit metrics in http://aliyun-exporter:9527/metrics
+You can visit metrics in http://aliyun-exporter:8100/metrics
 
 ## 2. Based on request parameters.
 In this way, the authentication information of the configuration file will be ignored, and all authentication information needs to be provided through the parameters in the get request.

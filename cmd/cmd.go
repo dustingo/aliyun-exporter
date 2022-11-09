@@ -1,15 +1,16 @@
 package cmd
 
 import (
+	"aliyun-exporter/pkg/client"
+	"aliyun-exporter/pkg/collector"
+	"aliyun-exporter/pkg/config"
+	"aliyun-exporter/pkg/handler"
+	"aliyun-exporter/version"
 	"fmt"
-	"github.com/IAOTW/aliyun-exporter/pkg/client"
-	"github.com/IAOTW/aliyun-exporter/pkg/collector"
-	"github.com/IAOTW/aliyun-exporter/pkg/config"
-	"github.com/IAOTW/aliyun-exporter/pkg/handler"
-	"github.com/IAOTW/aliyun-exporter/version"
-	"github.com/spf13/cobra"
 	"os"
 	"text/tabwriter"
+
+	"github.com/spf13/cobra"
 )
 
 const AppName = "cloudmonitor"

@@ -1,17 +1,17 @@
 package handler
 
 import (
+	"aliyun-exporter/pkg/client"
+	"aliyun-exporter/pkg/collector"
+	"aliyun-exporter/pkg/config"
 	"fmt"
-	"github.com/IAOTW/aliyun-exporter/pkg/client"
-	"github.com/IAOTW/aliyun-exporter/pkg/collector"
-	"github.com/IAOTW/aliyun-exporter/pkg/config"
+	"net"
+	"net/http"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"net"
-	"net/http"
-	"sigs.k8s.io/yaml"
 )
 
 // Handler http metrics handler
@@ -68,17 +68,22 @@ func New(addr string, logger log.Logger, rate int, cfg *config.Config, c map[str
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		handlerMetrics(w, r, c)
 	})
-	http.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
-		c, err := yaml.Marshal(cfg)
-		if err != nil {
-			level.Error(logger).Log("msg", "Error marshaling configuration", "err", err)
-			http.Error(w, err.Error(), 500)
-			return
-		}
-		w.Write(c)
-	})
+	// 不安全
+	// http.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
+	// 	c, err := yaml.Marshal(cfg)
+	// 	if err != nil {
+	// 		level.Error(logger).Log("msg", "Error marshaling configuration", "err", err)
+	// 		http.Error(w, err.Error(), 500)
+	// 		return
+	// 	}
+	// 	w.Write(c)
+	// })
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Service is UP"))
+	})
+	http.HandleFunc("/-/reload", func(w http.ResponseWriter, r *http.Request) {
+		// 目前尚未找到好的配置文件重载方式
+		return
 	})
 	return h, nil
 }
@@ -126,9 +131,9 @@ func handlerMonitors(w http.ResponseWriter, r *http.Request, logger log.Logger, 
 		cfg.Credentials = make(map[string]config.Credential)
 	}
 	cfg.Credentials[cloudId] = config.Credential{
-		accessKey,
-		accessKeySecret,
-		regionId,
+		AccessKey:       accessKey,
+		AccessKeySecret: accessKeySecret,
+		Region:          regionId,
 	}
 	cfg.SetDefaults()
 	cli, err := client.NewMetricClient(cloudId, accessKey, accessKeySecret, regionId, logger)

@@ -1,11 +1,12 @@
 package collector
 
 import (
-	"github.com/IAOTW/aliyun-exporter/pkg/client"
-	"github.com/IAOTW/aliyun-exporter/pkg/config"
+	"aliyun-exporter/pkg/client"
+	"aliyun-exporter/pkg/config"
+	"sync"
+
 	"github.com/go-kit/kit/log"
 	"github.com/prometheus/client_golang/prometheus"
-	"sync"
 )
 
 const AppName = "cloudmonitor"

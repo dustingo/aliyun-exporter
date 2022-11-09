@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+
 	"sigs.k8s.io/yaml"
 )
 
@@ -13,13 +14,15 @@ type Credential struct {
 
 // Config exporter config
 type Config struct {
-	Credentials    map[string]Credential  `json:"credentials"`
+	Credentials map[string]Credential `json:"credentials"`
 	// todo: add extra labels
-	Labels        map[string]string    `json:"labels,omitempty"`
-	Metrics       map[string][]*Metric `json:"metrics"` // mapping for namespace and metrics
+	// mark!! 实际上labels应该加到metrics里面，因为需要区分资源属于哪些组
+	//Labels  map[string]string    `json:"labels,omitempty"`
+	Metrics map[string][]*Metric `json:"metrics"` // mapping for namespace and metrics
 	//InstanceInfos []string             `json:"instanceInfos"`
 }
 
+// SetDefaults 设置默认值
 func (c *Config) SetDefaults() {
 	for key, _ := range c.Credentials {
 		if c.Credentials[key].Region == "" {
@@ -30,7 +33,7 @@ func (c *Config) SetDefaults() {
 	}
 	for _, metrics := range c.Metrics {
 		for i := range metrics {
-			metrics[i].setDefaults()
+			metrics[i].setDefaults() // Metrics的方法setDefaults
 		}
 	}
 }

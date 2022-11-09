@@ -17,7 +17,17 @@ type Metric struct {
 	Unit        string   `json:"unit,omitempty"`
 	Measure     string   `json:"measure,omitempty"`
 	Format      bool     `json:"format,omitempty"`
-	desc        *prometheus.Desc
+	//Spec        map[string][]Claim `json:"spec,omitempty"`
+	Spec Spec `json:"spec,omitempty"`
+	desc *prometheus.Desc
+}
+type Claim struct {
+	App      string   `json:"app,omitempty"`
+	Team     string   `json:"team,omitempty"`
+	Instance []string `json:"instance,omitempty"`
+}
+type Spec struct {
+	Claim []Claim `json:"claim,omitempty"`
 }
 
 // setdefault options
@@ -58,7 +68,14 @@ func (m *Metric) Desc(ns, sub string, dimensions ...string) *prometheus.Desc {
 	if len(m.Dimensions) == 0 {
 		m.Dimensions = dimensions
 	}
-	if m.desc == nil {
+	if m.desc == nil && len(m.Spec.Claim) != 0 {
+		m.desc = prometheus.NewDesc(
+			strings.Join([]string{ns, sub, m.String()}, "_"),
+			m.Description,
+			append(m.Dimensions, "cloudID", "app", "team"),
+			nil,
+		)
+	} else if m.desc == nil || len(m.Spec.Claim) == 0 {
 		m.desc = prometheus.NewDesc(
 			strings.Join([]string{ns, sub, m.String()}, "_"),
 			m.Description,
