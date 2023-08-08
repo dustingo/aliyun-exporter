@@ -5,6 +5,7 @@
 *.dll
 *.so
 *.dylib
+*.log
 bin
 
 # Test binary, build with `go test -c`
@@ -29,3 +30,4 @@ vendor/
 .vscode/%
 *.log
 config-test.yaml
+aliyun-exporter-consul

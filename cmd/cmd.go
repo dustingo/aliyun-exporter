@@ -40,7 +40,11 @@ func newServeMetricsCommand() *cobra.Command {
 			return o.Complete()
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			cfg, err := config.Parse(o.so.configFile)
+			consul, err := client.NewConsulClient(o.so.consulAddress, o.so.token)
+			if err != nil {
+				return err
+			}
+			cfg, err := config.Parse(consul, o.so.configKey)
 			if err != nil {
 				return err
 			}

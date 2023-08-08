@@ -18,6 +18,11 @@ go build -o aliyun-exporter
 # run
 ./aliyun-exporter serve
 ```
+## 2023-08 update
+- 将配置迁移到consul，方便修改配置
+```shell
+aliyun-exporter-consul serve --consul.address="localhost:8500" --consul.token="" --consul.key="aliyun"
+```
 ## Update
 - 新增了yaml配置选项："spec",因为我们往往会创建很多的资源组来区分资源的归属,所以"app"实际上就是资源组标识,"team"是我个人用的报警的推送组,"instance"为资源组下想要展示的资源实例.  
 - "instance"定义了要收集的实例ID,因为往往有时候你可以能只是一个ram账号，不想收集其他人的资源信息

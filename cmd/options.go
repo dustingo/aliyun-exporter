@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/spf13/cobra"
 )
 
@@ -77,13 +77,23 @@ func (o *options) Complete() error {
 }
 
 type serveOption struct {
-	configFile    string
+	//configFile    string
 	listenAddress string
+	// update consul
+	consulAddress string
+	token         string
+	configKey     string
 }
 
 func (o *serveOption) AddFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.configFile, "config", "c", "config.yaml", "Path of config file")
+	//cmd.Flags().StringVarP(&o.configFile, "config", "c", "config.yaml", "Path of config file")
 	cmd.Flags().StringVar(&o.listenAddress, "web.listen-address", ":8100", "Address on which to expose metrics and web interface.")
+	//update
+	cmd.Flags().StringVar(&o.consulAddress, "consul.address", "127.0.0.1:8500", "consul address")
+	cmd.Flags().StringVar(&o.token, "consul.token", "", "consul token")
+	cmd.Flags().StringVar(&o.configKey, "consul.key", "", "consul key")
+	cmd.MarkFlagRequired(o.token)
+	cmd.MarkFlagRequired(o.configKey)
 }
 
 func (o *serveOption) Complete() error {

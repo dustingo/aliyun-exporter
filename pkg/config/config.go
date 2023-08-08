@@ -1,8 +1,7 @@
 package config
 
 import (
-	"io/ioutil"
-
+	capi "github.com/hashicorp/consul/api"
 	"sigs.k8s.io/yaml"
 )
 
@@ -24,7 +23,7 @@ type Config struct {
 
 // SetDefaults 设置默认值
 func (c *Config) SetDefaults() {
-	for key, _ := range c.Credentials {
+	for key := range c.Credentials {
 		if c.Credentials[key].Region == "" {
 			credential := c.Credentials[key]
 			credential.Region = "cn-hangzhou"
@@ -38,16 +37,26 @@ func (c *Config) SetDefaults() {
 	}
 }
 
-// Parse parse config from file
-func Parse(path string) (*Config, error) {
-	b, err := ioutil.ReadFile(path)
+// Parse parse config from consul
+func Parse(consul *capi.Client, key string) (*Config, error) {
+	p, _, err := consul.KV().Get(key, nil)
 	if err != nil {
 		return nil, err
 	}
 	var cfg Config
-	if err = yaml.Unmarshal(b, &cfg); err != nil {
+	err = yaml.Unmarshal(p.Value, &cfg)
+	if err != nil {
 		return nil, err
 	}
-	cfg.SetDefaults()
 	return &cfg, nil
+	// 	b, err := ioutil.ReadFile(path)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	var cfg Config
+	// 	if err = yaml.Unmarshal(b, &cfg); err != nil {
+	// 		return nil, err
+	// 	}
+	// 	cfg.SetDefaults()
+	// 	return &cfg, nil
 }

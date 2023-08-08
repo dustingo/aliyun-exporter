@@ -8,8 +8,8 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -83,14 +83,15 @@ func New(addr string, logger log.Logger, rate int, cfg *config.Config, c map[str
 	})
 	http.HandleFunc("/-/reload", func(w http.ResponseWriter, r *http.Request) {
 		// 目前尚未找到好的配置文件重载方式
-		return
+		//return
+
 	})
 	return h, nil
 }
 
 func handlerMetrics(w http.ResponseWriter, r *http.Request, c map[string]prometheus.Collector) {
 	registry := prometheus.NewRegistry()
-	for cloudId, _ := range c {
+	for cloudId := range c {
 		registry.MustRegister(c[cloudId])
 	}
 	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
@@ -142,14 +143,14 @@ func handlerMonitors(w http.ResponseWriter, r *http.Request, logger log.Logger, 
 	}
 	c := collector.NewCloudMonitorCollectorFromURL(cli, cloudId, cfg, rate, logger)
 	registry := prometheus.NewRegistry()
-	for i, _ := range c {
+	for i := range c {
 		registry.MustRegister(c[i])
 	}
 
 	// Delegate http serving to Prometheus client library, which will call collector.Collect.
 	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 	h.ServeHTTP(w, r)
-	return
+	//return
 }
 
 // Run start server
